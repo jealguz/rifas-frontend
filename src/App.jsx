@@ -4,6 +4,7 @@ import clienteAxios from './api/clienteAxios';
 import CrearRifa from './components/CrearRifa';
 import DashboardRifa from './components/DashboardRifa';
 import PanelVendedor from './components/PanelVendedor';
+import TicketVerificacion from './pages/TicketVerificacion';
 
 const styles = {
   loadingContainer: {
@@ -151,6 +152,7 @@ function App() {
               )
             } />
             <Route path="/vendedor/:rifaId/:vendedorId" element={<PanelVendedor />} />
+            <Route path="/ticket/:codigo" element={<TicketVerificacion />} />
             <Route path="/" element={<Navigate to="/admin" />} />
           </Routes>
         </div>

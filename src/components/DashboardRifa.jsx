@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import clienteAxios from '../api/clienteAxios';
+import TicketModal from './TicketModal';
 
 const isYouTube = (url) => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url);
 const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url) || (typeof url === 'string' && url.startsWith('data:video'));
@@ -222,6 +223,7 @@ function DashboardRifa({ datosRifa }) {
   const [estadoPago, setEstadoPago] = useState('debe');
   const [valorAbono, setValorAbono] = useState('');
 
+  const [ticketVenta, setTicketVenta] = useState(null);
   const [abrirModalGanador, setAbrirModalGanador] = useState(false);
   const [numeroGanadorInput, setNumeroGanadorInput] = useState('');
   const [ganadorOficial, setGanadorOficial] = useState(null);
@@ -301,7 +303,7 @@ function DashboardRifa({ datosRifa }) {
   const handleGuardarVenta = async (e) => {
     e.preventDefault();
     try {
-      await clienteAxios.put('/rifas/vender', {
+      const res = await clienteAxios.put('/rifas/vender', {
         rifa_id: idRifaCreada,
         numero: boletoSeleccionado.numero,
         nombre_cliente: nombreCliente,
@@ -311,7 +313,7 @@ function DashboardRifa({ datosRifa }) {
         valor_abono: estadoPago === 'abono' ? parseFloat(valorAbono) : 0,
         vendedor_id: boletoSeleccionado.vendedor?.id
       });
-      alert('Venta guardada!');
+      setTicketVenta(res.data.ticket);
       setBoletoSeleccionado(null);
     } catch (err) {
       console.error(err);
@@ -640,6 +642,16 @@ function DashboardRifa({ datosRifa }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* MODAL: Ticket de venta */}
+      {ticketVenta && (
+        <TicketModal
+          ticket={ticketVenta}
+          rifaData={seguroDatos}
+          vendedor={estadisticasVendedores.find(v => String(v.id) === String(boletoSeleccionado?.vendedor?.id || ticketVenta.vendedor_id))}
+          onClose={() => { setTicketVenta(null); setNombreCliente(''); setCelularCliente(''); setDireccionReferencia(''); setValorAbono(''); }}
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import clienteAxios from '../api/clienteAxios';
+import TicketModal from './TicketModal';
 
 const isYouTube = (url) => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url);
 const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url) || (typeof url === 'string' && url.startsWith('data:video'));
@@ -153,6 +154,7 @@ function PanelVendedor() {
   const [vendedor, setVendedor] = useState(null);
   const [boletos, setBoletos] = useState([]);
 
+  const [ticketVenta, setTicketVenta] = useState(null);
   const [boletoSeleccionado, setBoletoSeleccionado] = useState(null);
   const [nombreCliente, setNombreCliente] = useState('');
   const [celularCliente, setCelularCliente] = useState('');
@@ -185,7 +187,7 @@ function PanelVendedor() {
   const handleGuardarVenta = async (e) => {
     e.preventDefault();
     try {
-      await clienteAxios.put('/rifas/vender', {
+      const res = await clienteAxios.put('/rifas/vender', {
         rifa_id: rifaId,
         numero: boletoSeleccionado.numero,
         nombre_cliente: nombreCliente,
@@ -195,7 +197,7 @@ function PanelVendedor() {
         valor_abono: estadoPago === 'abono' ? parseFloat(valorAbono) : 0,
         vendedor_id: vendedorId
       });
-      alert('¡Venta guardada!');
+      setTicketVenta(res.data.ticket);
       setBoletoSeleccionado(null);
     } catch (err) {
       console.error(err);
@@ -333,6 +335,15 @@ function PanelVendedor() {
             </form>
           </div>
         </div>
+      )}
+
+      {ticketVenta && (
+        <TicketModal
+          ticket={ticketVenta}
+          rifaData={rifaData}
+          vendedor={vendedor}
+          onClose={() => { setTicketVenta(null); setNombreCliente(''); setCelularCliente(''); setDireccionReferencia(''); setValorAbono(''); }}
+        />
       )}
     </div>
   );
