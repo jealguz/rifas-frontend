@@ -109,6 +109,15 @@ function App() {
       }
     };
     verificarRifaActiva();
+
+    // Keep-alive cada 60s para que Render no duerma el servidor
+    const intervalo = setInterval(async () => {
+      try {
+        await clienteAxios.get('/health');
+      } catch (_) {}
+    }, 60000);
+
+    return () => clearInterval(intervalo);
   }, []);
 
   if (cargando) {
