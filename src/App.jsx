@@ -126,7 +126,7 @@ function App() {
         <div style={styles.navInner}>
           <div style={styles.logo}>
             <div style={styles.logoIcon}>R</div>
-            <span> Rifas</span>
+            <span> Rifas FONAMENPRE</span>
           </div>
           <span style={styles.navBadge}>Sistema Profesional</span>
         </div>
