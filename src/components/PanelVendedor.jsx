@@ -94,7 +94,7 @@ const s = {
       background: '#e2e8f0', color: '#94a3b8', border: '1.5px solid #e2e8f0',
       cursor: 'not-allowed', opacity: 0.5,
     };
-    const d = estado_pago === 'disponible';
+    const clickeable = estado_pago === 'disponible' || estado_pago === 'debe' || estado_pago === 'abono';
     let bg = '#fff', text = '#475569', border = `1.5px solid ${color}`;
     if (estado_pago === 'pagado') { bg = color; text = '#fff'; border = `1.5px solid ${color}`; }
     else if (estado_pago === 'debe') { bg = '#fef2f2'; text = '#dc2626'; border = '1.5px solid #fca5a5'; }
@@ -102,8 +102,8 @@ const s = {
     return {
       aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
       borderRadius: 10, fontSize: 12, fontWeight: 700,
-      cursor: d ? 'pointer' : 'not-allowed',
-      background: bg, color: text, border, opacity: d ? 1 : 0.7,
+      cursor: clickeable ? 'pointer' : 'not-allowed',
+      background: bg, color: text, border, opacity: clickeable ? 1 : 0.7,
       transition: 'all 0.15s',
     };
   },
@@ -169,6 +169,10 @@ function PanelVendedor() {
   const [estadoPago, setEstadoPago] = useState('debe');
   const [valorAbono, setValorAbono] = useState('');
 
+  const [boletoActualizar, setBoletoActualizar] = useState(null);
+  const [nuevoEstadoPago, setNuevoEstadoPago] = useState('pagado');
+  const [nuevoAbonoValor, setNuevoAbonoValor] = useState('');
+
   useEffect(() => {
     const cargarDatos = async () => {
       if (!rifaId || !vendedorId) return;
@@ -209,6 +213,26 @@ function PanelVendedor() {
     } catch (err) {
       console.error(err);
       alert('Error al procesar la venta.');
+    }
+  };
+
+  const handleActualizarPago = async (e) => {
+    e.preventDefault();
+    try {
+      await clienteAxios.put('/rifas/actualizar-pago', {
+        rifa_id: rifaId,
+        numero: boletoActualizar.numero,
+        nuevo_estado: nuevoEstadoPago,
+        valor_abono: nuevoEstadoPago === 'abono' ? parseFloat(nuevoAbonoValor) : 0
+      });
+      setBoletoActualizar(null);
+      const res = await clienteAxios.get(`/rifas/${rifaId}`);
+      if (res.data) {
+        setRifaData(res.data);
+        setBoletos(res.data.boletos_pregenerados || []);
+      }
+    } catch (err) {
+      alert('Error al actualizar pago: ' + (err.response?.data?.error || 'Error interno'));
     }
   };
 
@@ -285,7 +309,15 @@ function PanelVendedor() {
             return (
               <div
                 key={index}
-                onClick={() => esMia && boleto.estado_pago === 'disponible' && setBoletoSeleccionado(boleto)}
+                onClick={() => {
+                  if (!esMia) return;
+                  if (boleto.estado_pago === 'disponible') setBoletoSeleccionado(boleto);
+                  else if (boleto.estado_pago !== 'pagado') {
+                    setBoletoActualizar(boleto);
+                    setNuevoEstadoPago('pagado');
+                    setNuevoAbonoValor('');
+                  }
+                }}
                 style={s.ticket(esMia, boleto.estado_pago, vendedor?.color || '#6366f1')}
                 title={esMia ? `N° ${boleto.numero}` : `N° ${boleto.numero} (Otra ruta)`}
               >
@@ -339,6 +371,46 @@ function PanelVendedor() {
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button type="button" onClick={() => setBoletoSeleccionado(null)} style={s.btnCancel}>Cancelar</button>
                 <button type="submit" style={s.btnPrimary(vendedor?.color)}>Confirmar Venta</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Actualizar pago */}
+      {boletoActualizar && (
+        <div style={s.overlay} onClick={() => setBoletoActualizar(null)}>
+          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={s.modalTitle}>
+                Actualizar Pago{' '}
+                <span style={{ color: vendedor?.color }}>N° {boletoActualizar.numero}</span>
+              </h3>
+              <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, background: '#f1f5f9', fontWeight: 600, color: '#475569' }}>
+                {vendedor?.nombre}
+              </span>
+            </div>
+            <p style={{ marginBottom: 16, fontSize: 13, color: '#64748b' }}>
+              Estado actual: <strong>{boletoActualizar.estado_pago === 'debe' ? 'Lo Debe Completo' : 'Dejó un Abono'}</strong>
+            </p>
+            <form onSubmit={handleActualizarPago} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={s.field}>
+                <label style={s.label}>Nuevo Estado de Pago</label>
+                <select value={nuevoEstadoPago} onChange={(e) => setNuevoEstadoPago(e.target.value)} style={s.select}>
+                  <option value="pagado">Totalmente Pagado</option>
+                  <option value="abono">Dejó un Abono</option>
+                  <option value="debe">Lo Debe Completo</option>
+                </select>
+              </div>
+              {nuevoEstadoPago === 'abono' && (
+                <div style={s.field}>
+                  <label style={s.label}>Monto del Abono (COP)</label>
+                  <input type="number" placeholder="Ej. 5000" value={nuevoAbonoValor} onChange={(e) => setNuevoAbonoValor(e.target.value)} style={s.input} />
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <button type="button" onClick={() => setBoletoActualizar(null)} style={s.btnCancel}>Cancelar</button>
+                <button type="submit" style={s.btnPrimary(vendedor?.color)}>Actualizar Pago</button>
               </div>
             </form>
           </div>
