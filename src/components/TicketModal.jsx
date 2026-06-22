@@ -1,6 +1,13 @@
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
 
+const parseDate = (str) => {
+  if (!str) return null;
+  const m = String(str).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!m) return new Date(str);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+};
+
 const s = {
   overlay: {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -149,6 +156,7 @@ function TicketModal({ ticket, rifaData, vendedor, onClose }) {
             <button onClick={() => {
               const w = window.open('', '_blank');
               if (!w) return;
+              const fechaStr = rifaData?.fecha_sorteo ? parseDate(rifaData.fecha_sorteo).toLocaleDateString() : '';
               w.document.write(`<!DOCTYPE html><html><head><title>Ticket - ${ticket.numero}</title><style>
                 body{font-family:'Courier New',monospace;margin:0;padding:20px}
                 .t{max-width:350px;margin:0 auto;border:2px dashed #6366f1;padding:24px;border-radius:16px}
@@ -161,7 +169,7 @@ function TicketModal({ ticket, rifaData, vendedor, onClose }) {
                 .c{text-align:center;font-size:10px;color:#94a3b8;margin-top:12px}
               </style></head><body>
               <div class="t">
-                <div class="h"><h1>${rifaData?.nombre_rifa || 'Rifa'}</h1><p>${rifaData?.loteria || ''}${rifaData?.fecha_sorteo ? ' - '+new Date(rifaData.fecha_sorteo+'T12:00:00').toLocaleDateString() : ''}</p></div>
+                <div class="h"><h1>${rifaData?.nombre_rifa || 'Rifa'}</h1><p>${rifaData?.loteria || ''}${fechaStr ? ' - '+fechaStr : ''}</p></div>
                 <div class="n">${ticket.numero}</div>
                 <div class="i">
                   <div><strong>Comprador</strong><span>${ticket.nombre_cliente}</span></div>

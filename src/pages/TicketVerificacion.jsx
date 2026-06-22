@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import clienteAxios from '../api/clienteAxios';
 
-const parseDate = (str) => str ? new Date(str + 'T12:00:00') : null;
+const parseDate = (str) => {
+  if (!str) return null;
+  const m = String(str).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!m) return new Date(str);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+};
 const estadoColors = {
   pagado: { bg: '#dcfce7', text: '#166534' },
   debe: { bg: '#fef2f2', text: '#dc2626' },

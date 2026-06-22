@@ -3,7 +3,12 @@ import { useParams } from 'react-router-dom';
 import clienteAxios from '../api/clienteAxios';
 import TicketModal from './TicketModal';
 
-const parseDate = (str) => str ? new Date(str + 'T12:00:00') : null;
+const parseDate = (str) => {
+  if (!str) return null;
+  const m = String(str).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!m) return new Date(str);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+};
 
 const isYouTube = (url) => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url);
 const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url) || (typeof url === 'string' && url.startsWith('data:video'));

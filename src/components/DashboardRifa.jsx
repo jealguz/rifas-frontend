@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import clienteAxios from '../api/clienteAxios';
 import TicketModal from './TicketModal';
 
-const parseDate = (str) => str ? new Date(str + 'T12:00:00') : null;
+const parseDate = (str) => {
+  if (!str) return null;
+  const m = String(str).match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!m) return new Date(str);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+};
 
 const LOTERIAS_POR_DIA = {
   0: ['Sorteos Especiales', 'Extra de Colombia'],
