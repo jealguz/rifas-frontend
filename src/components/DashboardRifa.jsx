@@ -4,7 +4,7 @@ import TicketModal from './TicketModal';
 
 const parseDate = (str) => {
   if (!str) return null;
-  const m = String(str).match(/^(\d{4}-\d{2}-\d{2})/);
+  const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return new Date(str);
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 };
