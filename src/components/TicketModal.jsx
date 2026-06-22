@@ -161,7 +161,7 @@ function TicketModal({ ticket, rifaData, vendedor, onClose }) {
                 .c{text-align:center;font-size:10px;color:#94a3b8;margin-top:12px}
               </style></head><body>
               <div class="t">
-                <div class="h"><h1>${rifaData?.nombre_rifa || 'Rifa'}</h1><p>${rifaData?.loteria || ''}${rifaData?.fecha_sorteo ? ' - '+new Date(rifaData.fecha_sorteo).toLocaleDateString() : ''}</p></div>
+                <div class="h"><h1>${rifaData?.nombre_rifa || 'Rifa'}</h1><p>${rifaData?.loteria || ''}${rifaData?.fecha_sorteo ? ' - '+new Date(rifaData.fecha_sorteo+'T12:00:00').toLocaleDateString() : ''}</p></div>
                 <div class="n">${ticket.numero}</div>
                 <div class="i">
                   <div><strong>Comprador</strong><span>${ticket.nombre_cliente}</span></div>

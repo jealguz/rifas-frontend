@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import clienteAxios from '../api/clienteAxios';
 import TicketModal from './TicketModal';
 
+const parseDate = (str) => str ? new Date(str + 'T12:00:00') : null;
+
 const LOTERIAS_POR_DIA = {
   0: ['Sorteos Especiales', 'Extra de Colombia'],
   1: ['Lotería de Cundinamarca', 'Lotería del Tolima'],
@@ -410,7 +412,7 @@ function DashboardRifa({ datosRifa }) {
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, fontSize: 13, color: '#475569' }}>
                 <div><strong>Loteria:</strong> {rifa.loteria}</div>
-                <div><strong>Sorteo:</strong> {new Date(rifa.fecha_sorteo).toLocaleDateString()}</div>
+                <div><strong>Sorteo:</strong> {parseDate(rifa.fecha_sorteo)?.toLocaleDateString()}</div>
                 <div><strong>Ganador:</strong> <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 18 }}>{rifa.numero_ganador}</span></div>
                 <div><strong>Vendidos:</strong> {rifa.boletos_vendidos} / {rifa.total_boletos}</div>
               </div>
@@ -438,8 +440,9 @@ function DashboardRifa({ datosRifa }) {
             {seguroDatos.loteria && <><strong>{seguroDatos.loteria}</strong> &middot; </>}
             Sorteo:{' '}
             <span style={s.infoBarAccent}>
-              {new Date(seguroDatos.fecha_sorteo).toLocaleDateString('es-CO', {
+              {parseDate(seguroDatos.fecha_sorteo).toLocaleDateString('es-CO', {
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+
               })}
             </span>
           </span>

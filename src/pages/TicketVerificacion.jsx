@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import clienteAxios from '../api/clienteAxios';
 
+const parseDate = (str) => str ? new Date(str + 'T12:00:00') : null;
 const estadoColors = {
   pagado: { bg: '#dcfce7', text: '#166534' },
   debe: { bg: '#fef2f2', text: '#dc2626' },
@@ -87,7 +88,7 @@ function TicketVerificacion() {
             ['Celular', t.cliente_celular],
             ['Vendedor', t.vendedor_nombre],
             ['Lotería', t.loteria],
-            ['Fecha sorteo', t.fecha_sorteo ? new Date(t.fecha_sorteo).toLocaleDateString() : ''],
+            ['Fecha sorteo', t.fecha_sorteo ? parseDate(t.fecha_sorteo).toLocaleDateString() : ''],
           ].filter(([, v]) => v).map(([label, value], i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: 14 }}>
               <span style={{ color: '#64748b', fontWeight: 500 }}>{label}</span>

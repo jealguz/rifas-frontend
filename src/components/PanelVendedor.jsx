@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import clienteAxios from '../api/clienteAxios';
 import TicketModal from './TicketModal';
 
+const parseDate = (str) => str ? new Date(str + 'T12:00:00') : null;
+
 const isYouTube = (url) => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url);
 const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url) || (typeof url === 'string' && url.startsWith('data:video'));
 
@@ -239,7 +241,7 @@ function PanelVendedor() {
             <span>{rifaData.nombre_rifa}</span>
             {rifaData.loteria && <span>Lotería: {rifaData.loteria}</span>}
             {rifaData.fecha_sorteo && (
-              <span>Sorteo: {new Date(rifaData.fecha_sorteo).toLocaleDateString()}</span>
+              <span>Sorteo: {parseDate(rifaData.fecha_sorteo)?.toLocaleDateString()}</span>
             )}
             {rifaData.precio_boleto && (
               <span>Valor: ${rifaData.precio_boleto?.toLocaleString?.() || rifaData.precio_boleto}</span>
