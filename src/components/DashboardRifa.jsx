@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import clienteAxios from '../api/clienteAxios';
 import TicketModal from './TicketModal';
 
+const LOTERIAS_POR_DIA = {
+  0: ['Sorteos Especiales', 'Extra de Colombia'],
+  1: ['Lotería de Cundinamarca', 'Lotería del Tolima'],
+  2: ['Lotería de la Cruz Roja', 'Lotería del Huila'],
+  3: ['Lotería de Manizales', 'Lotería del Valle', 'Lotería del Meta'],
+  4: ['Lotería de Bogotá', 'Lotería del Quindío'],
+  5: ['Lotería de Medellín', 'Lotería de Santander', 'Lotería del Risaralda'],
+  6: ['Lotería de Boyacá', 'Lotería del Cauca', 'Extra de Colombia'],
+};
+
 const isYouTube = (url) => /(youtube\.com\/watch\?v=|youtu\.be\/)/.test(url);
 const isVideoUrl = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url) || (typeof url === 'string' && url.startsWith('data:video'));
 
@@ -232,6 +242,7 @@ function DashboardRifa({ datosRifa }) {
   const [finalizando, setFinalizando] = useState(false);
   const [abrirModalFecha, setAbrirModalFecha] = useState(false);
   const [nuevaFecha, setNuevaFecha] = useState('');
+  const [nuevaLoteria, setNuevaLoteria] = useState('');
   const [cambiandoFecha, setCambiandoFecha] = useState(false);
 
   useEffect(() => {
@@ -245,6 +256,14 @@ function DashboardRifa({ datosRifa }) {
     };
     cargarHistorial();
   }, []);
+
+  // Auto-sugerir lotería al cambiar la fecha en el modal
+  useEffect(() => {
+    if (!nuevaFecha) return;
+    const fecha = new Date(nuevaFecha + 'T12:00:00');
+    const sugerencias = LOTERIAS_POR_DIA[fecha.getDay()] || [];
+    if (sugerencias.length > 0) setNuevaLoteria(sugerencias[0]);
+  }, [nuevaFecha]);
 
   useEffect(() => {
     if (!idRifaCreada) return;
@@ -353,13 +372,15 @@ function DashboardRifa({ datosRifa }) {
     if (!nuevaFecha) return;
     setCambiandoFecha(true);
     try {
-      await clienteAxios.put(`/rifas/${idRifaCreada}/cambiar-fecha`, { fecha_sorteo: nuevaFecha });
-      alert('¡Fecha actualizada!');
+      const payload = { fecha_sorteo: nuevaFecha };
+      if (nuevaLoteria.trim()) payload.loteria = nuevaLoteria.trim();
+      await clienteAxios.put(`/rifas/${idRifaCreada}/cambiar-fecha`, payload);
+      alert('¡Rifa actualizada!');
       setAbrirModalFecha(false);
       const res = await clienteAxios.get(`/rifas/${idRifaCreada}`);
       setSeguroDatos(res.data);
     } catch (err) {
-      alert('Error al cambiar fecha: ' + (err.response?.data?.error || 'Error interno'));
+      alert('Error al actualizar: ' + (err.response?.data?.error || 'Error interno'));
     } finally {
       setCambiandoFecha(false);
     }
@@ -413,11 +434,14 @@ function DashboardRifa({ datosRifa }) {
       {/* Info bar */}
       {seguroDatos.fecha_sorteo && (
         <div style={s.infoBar}>
-          Fecha del sorteo:{' '}
-          <span style={s.infoBarAccent}>
-            {new Date(seguroDatos.fecha_sorteo).toLocaleDateString('es-CO', {
-              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            })}
+          <span>
+            {seguroDatos.loteria && <><strong>{seguroDatos.loteria}</strong> &middot; </>}
+            Sorteo:{' '}
+            <span style={s.infoBarAccent}>
+              {new Date(seguroDatos.fecha_sorteo).toLocaleDateString('es-CO', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              })}
+            </span>
           </span>
         </div>
       )}
@@ -430,7 +454,7 @@ function DashboardRifa({ datosRifa }) {
         <div style={s.headerActions}>
           <button onClick={() => setModoVista('activa')} style={s.tabBtn(modoVista === 'activa')}>Panel Activo</button>
           <button onClick={() => setModoVista('historial')} style={s.tabBtn(modoVista === 'historial')}>Historial</button>
-          <button onClick={() => { setAbrirModalFecha(true); setNuevaFecha(seguroDatos.fecha_sorteo || ''); }} style={s.actionBtn('#f59e0b')}>Cambiar Fecha</button>
+          <button onClick={() => { setAbrirModalFecha(true); setNuevaFecha(seguroDatos.fecha_sorteo || ''); setNuevaLoteria(seguroDatos.loteria || ''); }} style={s.actionBtn('#f59e0b')}>Cambiar Fecha / Lotería</button>
           <button onClick={() => { setAbrirModalGanador(true); setNumeroGanadorInput(''); setGanadorOficial(null); }} style={s.actionBtn('#ef4444')}>Asignar Ganador</button>
         </div>
       </div>
@@ -622,21 +646,25 @@ function DashboardRifa({ datosRifa }) {
         </div>
       )}
 
-      {/* MODAL: Cambiar Fecha */}
+      {/* MODAL: Cambiar Fecha / Lotería */}
       {abrirModalFecha && (
         <div style={s.overlay} onClick={() => setAbrirModalFecha(false)}>
-          <div style={{ ...s.modal, maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={s.modalTitle}>Cambiar Fecha del Sorteo</h3>
-            <p style={s.modalSub}>Selecciona la nueva fecha para el sorteo.</p>
+          <div style={{ ...s.modal, maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={s.modalTitle}>Cambiar Fecha / Lotería</h3>
+            <p style={s.modalSub}>Actualiza la fecha del sorteo y/o la lotería.</p>
             <form onSubmit={handleCambiarFecha} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={s.field}>
                 <label style={s.label}>Nueva Fecha</label>
                 <input type="date" value={nuevaFecha} onChange={(e) => setNuevaFecha(e.target.value)} style={s.input} required />
               </div>
+              <div style={s.field}>
+                <label style={s.label}>Lotería</label>
+                <input type="text" value={nuevaLoteria} onChange={(e) => setNuevaLoteria(e.target.value)} style={s.input} placeholder="Ej. Lotería de Bogotá" />
+              </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button type="button" onClick={() => setAbrirModalFecha(false)} style={s.btnCancel}>Cancelar</button>
                 <button type="submit" disabled={cambiandoFecha} style={{ ...s.btnPrimary, background: '#f59e0b' }}>
-                  {cambiandoFecha ? 'Guardando...' : 'Guardar Fecha'}
+                  {cambiandoFecha ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </form>

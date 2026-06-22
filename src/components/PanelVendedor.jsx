@@ -237,6 +237,7 @@ function PanelVendedor() {
         {rifaData && (
           <div style={s.headerInfo}>
             <span>{rifaData.nombre_rifa}</span>
+            {rifaData.loteria && <span>Lotería: {rifaData.loteria}</span>}
             {rifaData.fecha_sorteo && (
               <span>Sorteo: {new Date(rifaData.fecha_sorteo).toLocaleDateString()}</span>
             )}
