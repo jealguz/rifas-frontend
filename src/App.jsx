@@ -101,12 +101,16 @@ function App() {
 
   useEffect(() => {
     let cancelada = false;
+    let timeout;
+
     const verificarRifaActiva = async () => {
       try {
         const res = await clienteAxios.get('/rifas/ultima-activa');
         if (!cancelada && res.data) setRifaConfig(res.data);
+        clearTimeout(timeout);
       } catch (error) {
         if (!cancelada) console.log("No hay rifa activa, mostrar formulario.");
+        clearTimeout(timeout);
       } finally {
         if (!cancelada) setCargando(false);
       }
@@ -114,7 +118,7 @@ function App() {
     verificarRifaActiva();
 
     // Si en 70 seg el servidor no responde (Render cold start hasta 60s), mostrar error
-    const timeout = setTimeout(() => {
+    timeout = setTimeout(() => {
       if (!cancelada) {
         setErrorCarga(true);
         setCargando(false);
