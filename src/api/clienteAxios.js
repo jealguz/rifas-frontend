@@ -6,7 +6,8 @@ const baseURL = process.env.NODE_ENV === 'production'
   : 'http://localhost:3000/api';
 
 const clienteAxios = axios.create({
-  baseURL
+  baseURL,
+  timeout: 60000
 });
 
 export default clienteAxios;

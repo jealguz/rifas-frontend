@@ -97,19 +97,29 @@ const styles = {
 function App() {
   const [rifaConfig, setRifaConfig] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(false);
 
   useEffect(() => {
+    let cancelada = false;
     const verificarRifaActiva = async () => {
       try {
         const res = await clienteAxios.get('/rifas/ultima-activa');
-        if (res.data) setRifaConfig(res.data);
+        if (!cancelada && res.data) setRifaConfig(res.data);
       } catch (error) {
-        console.log("No hay rifa activa, mostrar formulario.");
+        if (!cancelada) console.log("No hay rifa activa, mostrar formulario.");
       } finally {
-        setCargando(false);
+        if (!cancelada) setCargando(false);
       }
     };
     verificarRifaActiva();
+
+    // Si en 70 seg el servidor no responde (Render cold start hasta 60s), mostrar error
+    const timeout = setTimeout(() => {
+      if (!cancelada) {
+        setErrorCarga(true);
+        setCargando(false);
+      }
+    }, 70000);
 
     // Keep-alive cada 60s para que Render no duerma el servidor
     const intervalo = setInterval(async () => {
@@ -118,7 +128,7 @@ function App() {
       } catch (_) {}
     }, 60000);
 
-    return () => clearInterval(intervalo);
+    return () => { clearInterval(intervalo); clearTimeout(timeout); cancelada = true; };
   }, []);
 
   if (cargando) {
@@ -126,6 +136,24 @@ function App() {
       <div style={styles.loadingContainer}>
         <div style={styles.spinner} />
         <span style={styles.loadingText}>Iniciando sistema...</span>
+        <span style={{ color: '#64748b', fontSize: 12 }}>Conectando con el servidor...</span>
+      </div>
+    );
+  }
+
+  if (errorCarga) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16, padding: 20, textAlign: 'center' }}>
+        <span style={{ color: '#94a3b8', fontSize: 15, fontWeight: 500, maxWidth: 400 }}>
+          El servidor está tardando en responder. Puede estar arrancando (Render tarda hasta 60s en reactivarse).
+        </span>
+        <button onClick={() => window.location.reload()} style={{
+          padding: '12px 28px', borderRadius: 10, border: 'none',
+          background: '#6366f1', color: '#fff', fontWeight: 600, fontSize: 15,
+          cursor: 'pointer', marginTop: 8,
+        }}>
+          Reintentar
+        </button>
       </div>
     );
   }
