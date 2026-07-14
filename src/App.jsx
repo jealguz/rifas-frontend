@@ -117,22 +117,15 @@ function App() {
     };
     verificarRifaActiva();
 
-    // Si en 70 seg el servidor no responde (Render cold start hasta 60s), mostrar error
+    // Timeout de seguridad por si el servidor no responde
     timeout = setTimeout(() => {
       if (!cancelada) {
         setErrorCarga(true);
         setCargando(false);
       }
-    }, 70000);
+    }, 30000);
 
-    // Keep-alive cada 60s para que Render no duerma el servidor
-    const intervalo = setInterval(async () => {
-      try {
-        await clienteAxios.get('/health');
-      } catch (_) {}
-    }, 60000);
-
-    return () => { clearInterval(intervalo); clearTimeout(timeout); cancelada = true; };
+    return () => { clearTimeout(timeout); cancelada = true; };
   }, []);
 
   if (cargando) {
@@ -149,7 +142,7 @@ function App() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16, padding: 20, textAlign: 'center' }}>
         <span style={{ color: '#94a3b8', fontSize: 15, fontWeight: 500, maxWidth: 400 }}>
-          El servidor está tardando en responder. Puede estar arrancando (Render tarda hasta 60s en reactivarse).
+          El servidor está tardando en responder. Verifica tu conexión e intenta de nuevo.
         </span>
         <button onClick={() => window.location.reload()} style={{
           padding: '12px 28px', borderRadius: 10, border: 'none',
